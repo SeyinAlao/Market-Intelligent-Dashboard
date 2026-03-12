@@ -95,3 +95,35 @@ export interface StockListWidgetProps {
   data: StockItem[];
   isTabbed?: boolean;
 }
+
+export interface FormattedStock {
+  symbol: string;
+  name: string;
+  price: number;
+  changePercent: number;
+  changeAmount: number;
+  financials?: {
+    totalRevenue?: string | number;
+    revenueGrowth?: string;
+    ebitda?: string | number;
+    profitMargin?: string;
+    totalCash?: string | number;
+    totalDebt?: string | number;
+  };
+  earnings?: {
+    history?: Array<{ date: string; actual: number; estimate: number }>;
+  };
+  recommendationTrends?: {
+    buy: number;
+    hold: number;
+    sell: number;
+    strongBuy: number;
+    strongSell: number;
+  };
+  peRatio: string | number;
+  marketCap: string | number;
+  high: string | number;
+  low: string | number;
+  volume: string | number;
+  avgVolume: string | number;
+}

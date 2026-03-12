@@ -1,41 +1,10 @@
 import { useState, useEffect } from 'react';
 import { mockStockList } from '../MOCKDATA/mockStocks'; 
 import { mockDayGainers, mockDayLosers, mockMostActive } from '../MOCKDATA/mockMarket';
-import type { StockPriceData, MostActiveStock } from '../types';
+import type { StockPriceData, MostActiveStock, FormattedStock } from '../types';
 
 type RawStockData = StockPriceData | MostActiveStock;
 
-export interface FormattedStock {
-  symbol: string;
-  name: string;
-  price: number;
-  changePercent: number;
-  changeAmount: number;
-  financials?: {
-    totalRevenue?: string | number;
-    revenueGrowth?: string;
-    ebitda?: string | number;
-    profitMargin?: string;
-    totalCash?: string | number;
-    totalDebt?: string | number;
-  };
-  earnings?: {
-    history?: Array<{ date: string; actual: number; estimate: number }>;
-  };
-  recommendationTrends?: {
-    buy: number;
-    hold: number;
-    sell: number;
-    strongBuy: number;
-    strongSell: number;
-  };
-  peRatio: string | number;
-  marketCap: string | number;
-  high: string | number;
-  low: string | number;
-  volume: string | number;
-  avgVolume: string | number;
-}
 const fetchStockData = async (symbol: string): Promise<FormattedStock> => {
   return new Promise((resolve, reject) => {
     setTimeout(() => { 

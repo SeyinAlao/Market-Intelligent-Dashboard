@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { mockPerformanceData } from '../MOCKDATA/mockStocks'; 
 import { useStockProfile } from '../hooks/useStockProfile'; 
@@ -11,6 +12,7 @@ const StockDetail = () => {
   const { symbol } = useParams();
   const navigate = useNavigate();
   const { stock, isLoading, error } = useStockProfile(symbol);
+  const [timeframe, setTimeframe] = useState<'1M' | '6M' | '1Y'>('6M');
 
   if (isLoading) {
     return (
@@ -26,12 +28,11 @@ const StockDetail = () => {
         <AlertCircle size={48} className="text-red-400" />
         <div className="text-slate-800 font-bold text-xl">{error || "Stock Not Found"}</div>
         <button onClick={() => navigate(-1)} className="text-blue-600 font-medium hover:underline mt-2">
-          Return to Dashboard
+          Return To Dashboard
         </button>
       </div>
     );
   }
-
   const isPositive = stock.changePercent >= 0;
   const totalAnalysts = stock.recommendationTrends 
     ? stock.recommendationTrends.buy + stock.recommendationTrends.hold + stock.recommendationTrends.sell + stock.recommendationTrends.strongBuy + stock.recommendationTrends.strongSell
@@ -42,6 +43,13 @@ const StockDetail = () => {
     { name: 'Hold', value: stock.recommendationTrends.hold },
     { name: 'Sell', value: stock.recommendationTrends.sell + stock.recommendationTrends.strongSell },
   ] : [];
+  const getChartData = () => {
+    if (timeframe === '1M') return mockPerformanceData.slice(-5);
+    if (timeframe === '6M') return mockPerformanceData.slice(-15);
+    if (timeframe === '1Y') return mockPerformanceData.slice(-30);
+    return mockPerformanceData;
+  };
+  const activeChartData = getChartData();
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-slate-800 font-sans p-6 md:p-10">
@@ -79,14 +87,25 @@ const StockDetail = () => {
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-lg font-semibold text-slate-800">Performance</h3>
             <div className="flex bg-slate-50 rounded-lg p-1 space-x-1">
-              <button className="px-4 py-1.5 text-sm font-medium text-slate-500 rounded-md hover:bg-slate-200">1M</button>
-              <button className="px-4 py-1.5 text-sm font-medium text-white bg-[#1e293b] rounded-md shadow">6M</button>
-              <button className="px-4 py-1.5 text-sm font-medium text-slate-500 rounded-md hover:bg-slate-200">1Y</button>
+              {(['1M', '6M', '1Y'] as const).map((tf) => (
+                <button
+                  key={tf}
+                  onClick={() => setTimeframe(tf)}
+                  className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${
+                    timeframe === tf
+                      ? 'text-white bg-[#1e293b] shadow'
+                      : 'text-slate-500 hover:bg-slate-200'
+                  }`}
+                >
+                  {tf}
+                </button>
+              ))}
             </div>
+
           </div>
           <div className="h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={mockPerformanceData} margin={{ top: 5, right: 0, left: -25, bottom: 0 }}>
+              <LineChart data={activeChartData} margin={{ top: 5, right: 0, left: -25, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
                 <YAxis domain={['auto', 'auto']} axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
@@ -120,7 +139,7 @@ const StockDetail = () => {
                     <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dx={-10} />
                     <Tooltip cursor={{fill: '#f8f9fa'}} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', color: '#64748b', paddingTop: '20px' }} />
-                    <Bar dataKey="actual" name="Actual EPS" fill="#1e293b" radius={[4, 4, 0, 0]} barSize={24} />
+                    <Bar dataKey="actual" name="Actual Earning Per Share" fill="#1e293b" radius={[4, 4, 0, 0]} barSize={24} />
                     <Bar dataKey="estimate" name="Estimate" fill="#94a3b8" radius={[4, 4, 0, 0]} barSize={24} />
                   </BarChart>
                 </ResponsiveContainer>
