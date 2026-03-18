@@ -127,3 +127,112 @@ export interface FormattedStock {
   volume: string | number;
   avgVolume: string | number;
 }
+export interface FormattedDashboardData {
+  indices: MarketIndex[];
+  mostActive: MostActiveStock[];
+  gainers: MostActiveStock[];
+  losers: MostActiveStock[];
+  news: NewsArticle[];
+}
+
+export interface YahooIndex {
+  symbol: string;
+  shortName: string;
+  regularMarketPrice?: { raw: number };
+  regularMarketChange?: { raw: number };
+  regularMarketChangePercent?: { raw: number };
+}
+
+export interface YahooStock {
+  symbol: string;
+  shortName?: string;
+  longName?: string;
+  regularMarketPrice?: number;
+  regularMarketChangePercent?: number;
+  regularMarketVolume?: number;
+  marketCap?: number;
+}
+
+export interface YahooNewsArticle {
+  id?: string;
+  title?: string;
+  publisher?: string;
+  link?: string;
+  content?: {
+    title?: string;
+    provider?: { displayName?: string };
+    pubDate?: string;
+    thumbnail?: { resolutions?: { url: string }[] };
+    summary?: string;
+    clickThroughUrl?: { url?: string };
+      providerContentUrl?: string;
+  };
+}
+
+export interface YahooQuoteResponse {
+  finance?: { result?: { quotes: YahooStock[] }[] };
+  quoteResponse?: { result?: YahooStock[] };
+}
+
+export interface YahooQuoteSummaryResponse<T> {
+  quoteSummary?: {
+    result?: T[];
+  };
+}
+
+export interface PriceSummaryResult {
+  price?: {
+    symbol?: string;
+    shortName?: string;
+    longName?: string;
+    regularMarketPrice?: { raw: number } | number;
+    regularMarketChange?: { raw: number } | number;
+    regularMarketChangePercent?: { raw: number } | number;
+  };
+  summaryDetail?: {
+    marketCap?: { raw: number } | number;
+    trailingPE?: { raw: number } | number;
+    fiftyTwoWeekHigh?: { raw: number } | number;
+    fiftyTwoWeekLow?: { raw: number } | number;
+    volume?: { raw: number } | number;
+    averageVolume?: { raw: number } | number;
+  };
+}
+
+export interface FinancialDataResult {
+  financialData?: {
+    totalRevenue?: { raw: number } | number;
+    revenueGrowth?: { fmt: string } | string;
+    ebitda?: { raw: number } | number;
+    profitMargins?: { fmt: string } | string;
+    totalCash?: { raw: number } | number;
+    totalDebt?: { raw: number } | number;
+  };
+}
+
+export interface RecommendationTrendResult {
+  recommendationTrend?: {
+    trend?: {
+      buy?: number;
+      hold?: number;
+      sell?: number;
+      strongBuy?: number;
+      strongSell?: number;
+    }[];
+  };
+}
+
+export interface EarningsQuarterly {
+  date?: string;
+  actual?: { raw: number } | number;
+  estimate?: { raw: number } | number;
+}
+
+export interface EarningsResult {
+  earnings?: {
+    earningsChart?: {
+      quarterly?: EarningsQuarterly[];
+    };
+  };
+}
+

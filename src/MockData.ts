@@ -1,10 +1,8 @@
-
 export interface StockItem {
   symbol: string;
   price: number;
   changePercent: number;
 }
-
 
 export const mockGainers: StockItem[] = [
   { symbol: 'NVDA', price: 875.28, changePercent: 4.12 },

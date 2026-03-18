@@ -1,8 +1,18 @@
+import { useNavigate } from 'react-router-dom';
 import type { NewsArticle } from '../../types';
 
 const NewsCard = ({ article }: { article: NewsArticle }) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/news/${article.id}`, { state: { article } });
+  };
+
   return (
-    <div className="group flex gap-4 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-100 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-900 transition-all cursor-pointer">
+    <div 
+      onClick={handleClick}
+      className="group flex gap-4 bg-white dark:bg-slate-800 p-4 rounded-2xl border border-gray-100 dark:border-slate-700 hover:border-blue-200 dark:hover:border-blue-900 transition-all cursor-pointer no-underline"
+    >
       <div className="w-24 h-24 md:w-32 md:h-24 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
         <img 
           src={article.thumbnail} 

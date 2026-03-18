@@ -1,81 +1,41 @@
-import { useState, useEffect } from 'react';
-import { mockStockList } from '../MOCKDATA/mockStocks'; 
-import { mockDayGainers, mockDayLosers, mockMostActive } from '../MOCKDATA/mockMarket';
-import type { StockPriceData, MostActiveStock, FormattedStock } from '../types';
-
-type RawStockData = StockPriceData | MostActiveStock;
-
-const fetchStockData = async (symbol: string): Promise<FormattedStock> => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => { 
-      const allSources: RawStockData[] = [...mockStockList, ...mockDayGainers, ...mockDayLosers, ...mockMostActive];
-      const rawStock = allSources.find(s => s.symbol === symbol);
-
-      if (!rawStock) {
-        reject(new Error("Stock not found"));
-        return;
-      }
-      const asDetail = rawStock as Partial<StockPriceData>;
-      const asActive = rawStock as Partial<MostActiveStock>;
-
-      resolve({
-        symbol: rawStock.symbol,
-        name: asDetail.companyName ?? asActive.name ?? 'Unknown',
-        price: asDetail.currentPrice ?? asActive.price ?? 0,
-        changePercent: rawStock.changePercent ?? 0,
-        changeAmount: asDetail.changeAmount ?? 0, 
-        financials: asDetail.financials,
-        earnings: asDetail.earnings,
-        recommendationTrends: asDetail.recommendationTrends,
-        peRatio: asDetail.peRatio ?? 'N/A',
-        marketCap: asDetail.marketCapFormatted ?? asDetail.marketCap ?? 'N/A',
-        high: asDetail.fiftyTwoWeekHigh ?? 'N/A',
-        low: asDetail.fiftyTwoWeekLow ?? 'N/A',
-        volume: asDetail.volumeFormatted ?? asDetail.volume ?? asActive.volume ?? 'N/A',
-        avgVolume: asDetail.avgVolume ?? 'N/A',
-      });
-    }, 500); 
-  });
-};
+import { useQuery } from '@tanstack/react-query';
+import { fetchStockProfile } from '../services/marketApi';
+import type { FormattedStock } from '../types';
 
 export const useStockProfile = (symbol: string | undefined) => {
-  const [stock, setStock] = useState<FormattedStock | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, isError, error } = useQuery<FormattedStock, Error>({
+    queryKey: ['stockProfile', symbol], 
+    
+    queryFn: async () => {
+      if (!symbol) throw new Error("No symbol provided");
+      const CACHE_KEY = `market_stock_profile_${symbol}`;
+      const CACHE_EXPIRY = 1000 * 60 * 60 * 12; 
+      const cachedData = localStorage.getItem(CACHE_KEY);
+      const cacheTime = localStorage.getItem(`${CACHE_KEY}_time`);
 
-  useEffect(() => {
-    if (!symbol) return;
-    let isMounted = true; 
-    const loadData = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const data = await fetchStockData(symbol);
-        if (isMounted) {
-          setStock(data);
-        }
-      } catch (err: unknown) {
-        if (isMounted) {
-          setError(
-            typeof err === 'object' && err !== null && 'message' in err
-              ? (err as { message: string }).message
-              : 'Something went wrong'
-          );
-          setStock(null);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
+      if (cachedData && cacheTime) {
+        const isExpired = Date.now() - Number(cacheTime) > CACHE_EXPIRY;
+        if (!isExpired) {
+          console.log(` Using local cache for ${symbol}. API call saved!`);
+          return JSON.parse(cachedData);
         }
       }
-    };
+      console.log(` Fetching fresh API data for ${symbol}...`);
+      const freshData = await fetchStockProfile(symbol);
+      
+      localStorage.setItem(CACHE_KEY, JSON.stringify(freshData));
+      localStorage.setItem(`${CACHE_KEY}_time`, Date.now().toString());
 
-    loadData();
-    return () => {
-      isMounted = false;
-    };
-  }, [symbol]);
+      return freshData;
+    },
 
-  return { stock, isLoading, error };
+    enabled: !!symbol,
+    staleTime: 1000 * 60 * 60 * 12,
+  });
+
+  return {
+    stock: data || null,
+    isLoading,
+    error: isError ? error.message : null,
+  };
 };
