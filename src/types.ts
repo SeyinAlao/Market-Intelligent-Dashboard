@@ -236,3 +236,21 @@ export interface EarningsResult {
   };
 }
 
+export interface YahooRawNewsItem {
+  editorialContent?: YahooRawNewsItem;
+  content?: {
+    title?: string;
+    pubDate?: string;
+    summary?: string;
+    providerContentUrl?: string;
+    clickThroughUrl?: { url?: string };
+    provider?: { displayName?: string };
+    thumbnail?: { resolutions?: Array<{ url: string }> };
+  };
+  id?: string;
+  title?: string;
+  publisher?: string;
+  publishTime?: string;
+  link?: string;
+  thumbnail?: { resolutions?: Array<{ url: string }> };
+}

@@ -6,11 +6,13 @@ import StockListWidget from '../components/Dashboard/StockListWidget';
 import NewsCard from '../components/Dashboard/NewsCard'; 
 import IndexWidget from '../components/Dashboard/IndexWidget';
 import ThemeToggle from '../components/UI/ThemeToggle';
-import { fetchDashboardData, fetchMarketGainers, fetchMarketLosers } from '../services/marketApi';
+import { fetchMarketIndices, fetchMostActives, fetchMarketGainers, fetchMarketLosers } from '../services/marketApi';
+import { fetchMarketNews } from '../services/newsService';
 import type { FormattedDashboardData } from '../types';
 
 const CACHE_KEY = 'market_dashboard_data';
 const CACHE_EXPIRY = 1000 * 60 * 60 * 24; 
+
 const fetchWithCache = async (): Promise<FormattedDashboardData> => {
   const cachedData = localStorage.getItem(CACHE_KEY);
   const cacheTime = localStorage.getItem(`${CACHE_KEY}_time`);
@@ -24,7 +26,20 @@ const fetchWithCache = async (): Promise<FormattedDashboardData> => {
   }
 
   console.log(" Fetching fresh data from API...");
-  const freshData = await fetchDashboardData();
+
+  const [indices, mostActive, news] = await Promise.all([
+    fetchMarketIndices(),
+    fetchMostActives(),
+    fetchMarketNews()
+  ]);
+
+  const freshData: FormattedDashboardData = {
+    indices,
+    mostActive,
+    news,
+    gainers: [],
+    losers: []
+  };
   
   localStorage.setItem(CACHE_KEY, JSON.stringify(freshData));
   localStorage.setItem(`${CACHE_KEY}_time`, Date.now().toString());
@@ -47,12 +62,14 @@ const DashboardHome = () => {
     queryFn: fetchWithCache,
     staleTime: Infinity, 
   });
+
   const { data: gainersData, isLoading: isLoadingGainers } = useQuery({
     queryKey: ['marketGainers'],
     queryFn: fetchMarketGainers,
     enabled: activeTab === 'gainers', 
     staleTime: 1000 * 60 * 5, 
   });
+
   const { data: losersData, isLoading: isLoadingLosers } = useQuery({
     queryKey: ['marketLosers'],
     queryFn: fetchMarketLosers,
@@ -143,7 +160,7 @@ const DashboardHome = () => {
              ))}
           </div>
         </div>
-
+        
         <hr className="border-gray-100 dark:border-slate-800" />
         <div className="space-y-6">
           <h2 className="text-2xl font-bold text-blue-950 dark:text-white">Global Market Pulse</h2>

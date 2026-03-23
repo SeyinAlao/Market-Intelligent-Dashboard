@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { mockPerformanceData } from '../MOCKDATA/mockStocks'; 
-import { useStockProfile } from '../hooks/useStockProfile'; 
+import { useQuery } from '@tanstack/react-query';
+import { fetchStockProfile } from '../services/stockServices';
+import { mockPerformanceData } from '../MOCKDATA/mockStocks';
 import { ArrowLeft, TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
 import {  LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, 
   BarChart, Bar, Legend, Tooltip
@@ -10,8 +11,23 @@ import {  LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer,
 const StockDetail = () => {
   const { symbol } = useParams();
   const navigate = useNavigate();
-  const { stock, isLoading, error } = useStockProfile(symbol);
   const [timeframe, setTimeframe] = useState<'1M' | '6M' | '1Y'>('6M');
+  const { 
+    data: stock, 
+    isLoading, 
+    error: queryError 
+  } = useQuery({
+    queryKey: ['stockProfile', symbol],
+    queryFn: () => {
+      if (!symbol) throw new Error("Stock symbol is required");
+      return fetchStockProfile(symbol);
+    },
+    enabled: !!symbol, 
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const errorMessage = queryError instanceof Error ? queryError.message : null;
+  const error = errorMessage;
 
   if (isLoading) {
     return (
@@ -20,7 +36,7 @@ const StockDetail = () => {
       </div>
     );
   }
-
+  
   if (error || !stock) {
     return (
       <div className="min-h-screen bg-[#f8f9fa] dark:bg-brandBackground flex flex-col items-center justify-center gap-4 transition-colors duration-300">
@@ -32,7 +48,7 @@ const StockDetail = () => {
       </div>
     );
   }
-  
+
   const isPositive = stock.changePercent >= 0;
   const totalAnalysts = stock.recommendationTrends 
     ? stock.recommendationTrends.buy + stock.recommendationTrends.hold + stock.recommendationTrends.sell + stock.recommendationTrends.strongBuy + stock.recommendationTrends.strongSell
@@ -50,15 +66,15 @@ const StockDetail = () => {
     if (timeframe === '1Y') return mockPerformanceData.slice(-30);
     return mockPerformanceData;
   };
+  
   const activeChartData = getChartData();
-
+  
   return (
     <div className="min-h-screen bg-[#f8f9fa] dark:bg-brandBackground text-slate-800 dark:text-slate-200 font-sans p-6 md:p-10 transition-colors duration-300">
       <div className="max-w-6xl mx-auto space-y-6">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-400 dark:text-slate-500 font-medium hover:text-slate-600 dark:hover:text-slate-300 transition-colors mb-4">
           <ArrowLeft size={18} /> Back to Dashboard
         </button>
-
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8">
           <div>
             <h1 className="text-4xl font-bold text-slate-900 dark:text-white tracking-tight">{stock.symbol}</h1>
@@ -72,7 +88,6 @@ const StockDetail = () => {
             </div>
           </div>
         </div>
-
         <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[1.5rem] border border-slate-100 dark:border-slate-700 shadow-sm transition-colors duration-300">
           <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-6">Price Snapshot</h3>
           <div className="grid grid-cols-2 md:grid-cols-6 gap-6">
@@ -84,7 +99,6 @@ const StockDetail = () => {
             <SnapshotItem label="Avg Volume" value={stock.avgVolume} />
           </div>
         </div>
-
         <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[1.5rem] border border-slate-100 dark:border-slate-700 shadow-sm transition-colors duration-300">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Performance</h3>
@@ -187,6 +201,7 @@ const SnapshotItem = ({ label, value }: { label: string; value: string | number 
     <span className="text-[15px] font-medium text-slate-800 dark:text-slate-200">{value}</span>
   </div>
 );
+
 const FinancialBox = ({ label, value, trend }: { label: string; value: string | number; trend?: string }) => {
   const isPositiveTrend = trend?.startsWith('+') || parseFloat(trend || '0') > 0;
   
@@ -204,4 +219,5 @@ const FinancialBox = ({ label, value, trend }: { label: string; value: string | 
     </div>
   );
 };
+
 export default StockDetail;
