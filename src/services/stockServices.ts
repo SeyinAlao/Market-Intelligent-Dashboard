@@ -26,7 +26,7 @@ export const fetchStockProfile = async (symbol: string): Promise<FormattedStock>
   const financialResult = extractData<FinancialDataResult>(financialRaw);
   const trendResult = extractData<RecommendationTrendResult>(trendRaw);
   const earningsResult = extractData<EarningsResult>(earningsRaw);
-  
+
   const price = priceResult.price || {};
   const summary = priceResult.summaryDetail || {};
   const financialData = financialResult.financialData || {};

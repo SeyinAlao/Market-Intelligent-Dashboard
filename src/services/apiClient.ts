@@ -9,7 +9,7 @@ const options = {
     'Content-Type': 'application/json'
   }
 };
-
+ // the <T> is a generic type parameter that allows us to specify the expected return type when calling fetchApi, providing type safety and better developer experience with TypeScript.
 export const fetchApi = async <T>(endpoint: string): Promise<T> => {
   if (!API_KEY) throw new Error("API Key is missing in .env file.");
 
@@ -17,5 +17,5 @@ export const fetchApi = async <T>(endpoint: string): Promise<T> => {
   if (!response.ok) {
     throw new Error(`API Request Failed: ${response.status} ${response.statusText}`);
   }
-  return response.json();
+  return await response.json(); // usually asynchronous but we can await it here since we're already in an async function
 };
